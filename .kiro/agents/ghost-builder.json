@@ -1,0 +1,80 @@
+{
+  "name": "ghost-builder",
+  "description": "Spec-driven builder for Ghostfax: implements tasks from .kiro/specs/ghostfax/tasks.md one phase at a time, keeping the 40x24 teletext invariants and the test suite green.",
+  "prompt": "You are the Ghostfax builder. Always follow .kiro/steering/*.md. Work only from .kiro/specs/ghostfax/tasks.md: implement the requested tasks, tick their checkboxes (- [x]) when done, keep pure logic DOM-free, and never fake data. After writing code run `npm test` and fix failures before you stop.",
+  "tools": [
+    "glob",
+    "grep",
+    "read",
+    "shell",
+    "todo_list",
+    "write"
+  ],
+  "allowedTools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "grep",
+    "glob",
+    "todo_list"
+  ],
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "file://.kiro/specs/ghostfax/*.md"
+  ],
+  "hooks": [
+    {
+      "name": "agentSpawn-0",
+      "trigger": "agentSpawn",
+      "action": {
+        "type": "command",
+        "command": "echo '--- open tasks ---'; grep -c '^- \\[ \\]' .kiro/specs/ghostfax/tasks.md || true; git status --short | head -20"
+      },
+      "timeout": 10
+    },
+    {
+      "name": "postToolUse-0",
+      "trigger": "postToolUse",
+      "matcher": "write",
+      "action": {
+        "type": "command",
+        "command": "node scripts/grid-lint.mjs --quiet || true"
+      },
+      "timeout": 10
+    },
+    {
+      "name": "stop-0",
+      "trigger": "stop",
+      "action": {
+        "type": "command",
+        "command": "npm test --silent 2>&1 | tail -15"
+      },
+      "timeout": 10
+    }
+  ],
+  "permissions": {
+    "rules": [
+      {
+        "capability": "fs_read",
+        "effect": "allow"
+      },
+      {
+        "capability": "fs_write",
+        "effect": "allow"
+      },
+      {
+        "capability": "shell",
+        "effect": "allow"
+      },
+      {
+        "capability": "skill",
+        "effect": "allow"
+      }
+    ]
+  },
+  "kiroUpgrade": {
+    "revision": 2,
+    "fingerprint": "sha256:3b4a19b7f46f34ccf725a6de4f56de6743ba1162fd98e587cab323cf78af7e4b",
+    "source": "sha256:9ecf14f501de04ecb19b7543e7359485fe4fd21371cf8dc44e038992c200e3ca"
+  }
+}

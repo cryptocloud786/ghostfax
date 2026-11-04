@@ -1,0 +1,146 @@
+/* GHOSTFAX — Teletext, risen from the grave
+   CRT + teletext styling — Phase 5 effects added later */
+
+/* ── Bedstead font (self-hosted, added in task 33) ── */
+/* @font-face block will be inserted here */
+
+/* ── Reset & base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cell-w: 16px;
+  --cell-h: 20px;
+  --grid-cols: 40;
+  --grid-rows: 24;
+  --bg: #000;
+  --fg: #fff;
+  /* teletext 8-colour palette */
+  --c-black:   #000000;
+  --c-red:     #cc0000;
+  --c-green:   #00cc00;
+  --c-yellow:  #cccc00;
+  --c-blue:    #0000cc;
+  --c-magenta: #cc00cc;
+  --c-cyan:    #00cccc;
+  --c-white:   #cccccc;
+}
+
+body {
+  background: #111;
+  color: var(--c-white);
+  font-family: "Bedstead", monospace;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+/* ── Screen / TV shell ── */
+#tv { display: flex; flex-direction: column; gap: 0.75rem; align-items: center; }
+
+#screen {
+  background: var(--bg);
+  border: 4px solid #333;
+  border-radius: 4px;
+  padding: 2px;
+  /* CRT effects (enabled in task 34) */
+}
+
+/* ── Grid ── */
+#grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols), var(--cell-w));
+  grid-template-rows: repeat(var(--grid-rows), var(--cell-h));
+  width: calc(var(--grid-cols) * var(--cell-w));
+  height: calc(var(--grid-rows) * var(--cell-h));
+  overflow: hidden;
+  font-size: 14px;
+  line-height: var(--cell-h);
+  letter-spacing: 0;
+}
+
+.cell {
+  display: inline-block;
+  width: var(--cell-w);
+  height: var(--cell-h);
+  text-align: center;
+  white-space: pre;
+  overflow: hidden;
+}
+
+/* double-height: span 2 rows */
+.cell.dh { height: calc(var(--cell-h) * 2); font-size: 28px; line-height: calc(var(--cell-h) * 2); }
+
+/* flash — gated on .effects-enabled (task 34) */
+.effects-enabled .cell.flash { animation: cellFlash 1s step-end infinite; }
+
+@keyframes cellFlash { 50% { visibility: hidden; } }
+
+/* conceal */
+.cell.conceal { color: transparent !important; }
+.cell.conceal.revealed { color: inherit !important; }
+
+/* foreground colour classes */
+.fg-black   { color: var(--c-black);   }
+.fg-red     { color: var(--c-red);     }
+.fg-green   { color: var(--c-green);   }
+.fg-yellow  { color: var(--c-yellow);  }
+.fg-blue    { color: var(--c-blue);    }
+.fg-magenta { color: var(--c-magenta); }
+.fg-cyan    { color: var(--c-cyan);    }
+.fg-white   { color: var(--c-white);   }
+
+/* background colour classes */
+.bg-black   { background: var(--c-black);   }
+.bg-red     { background: var(--c-red);     }
+.bg-green   { background: var(--c-green);   }
+.bg-yellow  { background: var(--c-yellow);  }
+.bg-blue    { background: var(--c-blue);    }
+.bg-magenta { background: var(--c-magenta); }
+.bg-cyan    { background: var(--c-cyan);    }
+.bg-white   { background: var(--c-white);   }
+
+/* ── Remote ── */
+#remote { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 0.5rem; }
+
+#fastext-bar { display: flex; gap: 2px; }
+.fastext-btn {
+  flex: 1; padding: 4px 2px; border: none; cursor: pointer;
+  font-family: inherit; font-size: 12px; font-weight: bold;
+  text-transform: uppercase; letter-spacing: 0.05em; color: #000;
+}
+#btn-red    { background: var(--c-red);     color: #fff; }
+#btn-green  { background: var(--c-green);   }
+#btn-yellow { background: var(--c-yellow);  }
+#btn-cyan   { background: var(--c-cyan);    }
+
+#numpad {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+}
+.num-btn {
+  padding: 8px; font-family: inherit; font-size: 16px;
+  background: #222; color: #fff; border: 1px solid #444; cursor: pointer;
+  border-radius: 2px;
+}
+.num-btn:hover, #ctrl-bar button:hover { background: #333; }
+
+#ctrl-bar { display: flex; gap: 2px; }
+#ctrl-bar button {
+  flex: 1; padding: 6px 4px; font-family: inherit; font-size: 11px;
+  font-weight: bold; background: #222; color: #fff;
+  border: 1px solid #444; cursor: pointer; border-radius: 2px;
+  text-transform: uppercase;
+}
+
+/* ── Accessibility ── */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ── Reduced motion: kill everything ── */
+@media (prefers-reduced-motion: reduce) {
+  .cell.flash { animation: none !important; }
+  #screen { animation: none !important; }
+}
