@@ -1,146 +1,239 @@
 /* GHOSTFAX — Teletext, risen from the grave
-   CRT + teletext styling — Phase 5 effects added later */
+   CRT television + teletext styling. Every animation is gated behind
+   body.effects-enabled (removed by EXORCISE and prefers-reduced-motion). */
 
-/* ── Bedstead font (self-hosted, added in task 33) ── */
-/* @font-face block will be inserted here */
+@font-face {
+  font-family: "Bedstead";
+  src: url("../assets/fonts/bedstead.otf") format("opentype");
+  font-display: block;
+}
 
-/* ── Reset & base ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --cell-w: 16px;
-  --cell-h: 20px;
-  --grid-cols: 40;
-  --grid-rows: 24;
-  --bg: #000;
-  --fg: #fff;
-  /* teletext 8-colour palette */
+  /* Bedstead glyphs are 0.6em wide and 1em tall: size the font from the cell width. */
+  --cw: min(19px, calc((100vw - 380px) / 40));
+  --ch: calc(var(--cw) / 0.6);
+  --squash: 0.72;               /* 40x24 at Bedstead metrics -> ~4:3 picture */
   --c-black:   #000000;
-  --c-red:     #cc0000;
-  --c-green:   #00cc00;
-  --c-yellow:  #cccc00;
-  --c-blue:    #0000cc;
-  --c-magenta: #cc00cc;
-  --c-cyan:    #00cccc;
-  --c-white:   #cccccc;
+  --c-red:     #ff2a2a;
+  --c-green:   #2aff4a;
+  --c-yellow:  #fff23a;
+  --c-blue:    #2a3bff;
+  --c-magenta: #ff2aff;
+  --c-cyan:    #2affff;
+  --c-white:   #f4f4f4;
+  --pumpkin:   #ff7a18;
+  --slime:     #8cff5a;
 }
 
+@media (max-width: 900px) {
+  :root { --cw: min(19px, calc((100vw - 56px) / 40)); }
+}
+
+html { background: #07060a; }
 body {
-  background: #111;
-  color: var(--c-white);
-  font-family: "Bedstead", monospace;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
   min-height: 100vh;
-  padding: 1rem;
+  color: #d8d2e8;
+  font-family: "Bedstead", ui-monospace, monospace;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #2a1640 0%, transparent 60%),
+    radial-gradient(800px 500px at 90% 110%, #1a2a10 0%, transparent 60%),
+    #07060a;
+  overflow-x: hidden;
 }
 
-/* ── Screen / TV shell ── */
-#tv { display: flex; flex-direction: column; gap: 0.75rem; align-items: center; }
+.skip { position: absolute; left: -999px; top: 0; background: var(--c-yellow); color: #000; padding: 6px 10px; z-index: 10; }
+.skip:focus { left: 8px; top: 8px; }
+
+#room { max-width: 1280px; margin: 0 auto; padding: 18px 16px 28px; }
+
+#marquee { text-align: center; margin-bottom: 14px; }
+#marquee h1 {
+  font-size: 34px; letter-spacing: 6px; color: var(--c-white);
+  text-shadow: 0 0 12px rgba(140,255,90,.55), 0 0 2px #fff;
+}
+#marquee h1 span { color: var(--slime); }
+#marquee p { font-size: 13px; color: #9d93b5; letter-spacing: 1px; margin-top: 4px; }
+
+#stage { display: flex; gap: 22px; align-items: flex-start; justify-content: center; }
+@media (max-width: 900px) { #stage { flex-direction: column; align-items: center; } }
+
+/* ── The television ───────────────────────────────────────────────────── */
+#bezel {
+  padding: 26px 26px 12px;
+  border-radius: 34px;
+  background:
+    linear-gradient(160deg, #3a3542 0%, #1d1a22 45%, #121016 100%);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.75),
+    0 0 0 2px #0b0a0e,
+    inset 0 2px 1px rgba(255,255,255,.12),
+    inset 0 -6px 18px rgba(0,0,0,.6);
+}
+@media (max-width: 900px) { #bezel { padding: 14px 14px 8px; border-radius: 22px; } }
 
 #screen {
-  background: var(--bg);
-  border: 4px solid #333;
-  border-radius: 4px;
-  padding: 2px;
-  /* CRT effects (enabled in task 34) */
+  position: relative;
+  border-radius: 28px / 22px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: inset 0 0 0 3px #050505, inset 0 0 60px rgba(0,0,0,.95);
+  padding: calc(var(--cw) * 1) calc(var(--cw) * 1.2);
 }
 
-/* ── Grid ── */
+#grid-wrap {
+  width: calc(var(--cw) * 40);
+  height: calc(var(--ch) * 24 * var(--squash));
+  position: relative;
+}
+
 #grid {
   display: grid;
-  grid-template-columns: repeat(var(--grid-cols), var(--cell-w));
-  grid-template-rows: repeat(var(--grid-rows), var(--cell-h));
-  width: calc(var(--grid-cols) * var(--cell-w));
-  height: calc(var(--grid-rows) * var(--cell-h));
-  overflow: hidden;
-  font-size: 14px;
-  line-height: var(--cell-h);
-  letter-spacing: 0;
+  grid-template-columns: repeat(40, var(--cw));
+  grid-template-rows: repeat(24, var(--ch));
+  width: calc(var(--cw) * 40);
+  font-size: var(--ch);
+  line-height: var(--ch);
+  transform: scaleY(var(--squash));
+  transform-origin: 0 0;
+  font-kerning: none;
+  font-variant-ligatures: none;
+  cursor: default;
 }
 
 .cell {
-  display: inline-block;
-  width: var(--cell-w);
-  height: var(--cell-h);
-  text-align: center;
-  white-space: pre;
+  display: block;
+  width: var(--cw);
+  height: var(--ch);
   overflow: hidden;
+  white-space: pre;
+  text-align: left;
 }
-
-/* double-height: span 2 rows */
-.cell.dh { height: calc(var(--cell-h) * 2); font-size: 28px; line-height: calc(var(--cell-h) * 2); }
-
-/* flash — gated on .effects-enabled (task 34) */
-.effects-enabled .cell.flash { animation: cellFlash 1s step-end infinite; }
-
-@keyframes cellFlash { 50% { visibility: hidden; } }
-
-/* conceal */
+.cell.dh-top { transform: scaleY(2); transform-origin: 0 0; overflow: visible; position: relative; z-index: 1; }
+.cell.dh-bottom { color: transparent !important; }
 .cell.conceal { color: transparent !important; }
-.cell.conceal.revealed { color: inherit !important; }
 
-/* foreground colour classes */
-.fg-black   { color: var(--c-black);   }
-.fg-red     { color: var(--c-red);     }
-.fg-green   { color: var(--c-green);   }
-.fg-yellow  { color: var(--c-yellow);  }
-.fg-blue    { color: var(--c-blue);    }
-.fg-magenta { color: var(--c-magenta); }
-.fg-cyan    { color: var(--c-cyan);    }
-.fg-white   { color: var(--c-white);   }
+/* Phosphor glow */
+.effects-enabled #grid { text-shadow: 0 0 calc(var(--cw) * .35) currentColor; }
+.effects-enabled .cell.flash { animation: cellFlash 1s steps(1, end) infinite; }
+@keyframes cellFlash { 50% { color: transparent; } }
 
-/* background colour classes */
-.bg-black   { background: var(--c-black);   }
-.bg-red     { background: var(--c-red);     }
-.bg-green   { background: var(--c-green);   }
-.bg-yellow  { background: var(--c-yellow);  }
-.bg-blue    { background: var(--c-blue);    }
-.bg-magenta { background: var(--c-magenta); }
-.bg-cyan    { background: var(--c-cyan);    }
-.bg-white   { background: var(--c-white);   }
-
-/* ── Remote ── */
-#remote { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 0.5rem; }
-
-#fastext-bar { display: flex; gap: 2px; }
-.fastext-btn {
-  flex: 1; padding: 4px 2px; border: none; cursor: pointer;
-  font-family: inherit; font-size: 12px; font-weight: bold;
-  text-transform: uppercase; letter-spacing: 0.05em; color: #000;
+/* Scanlines, glass and the ghost roll */
+.scanlines, .glass, .ghost-roll { position: absolute; inset: 0; pointer-events: none; }
+.effects-enabled .scanlines {
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.28) 3px, rgba(0,0,0,0) 4px);
+  mix-blend-mode: multiply;
 }
-#btn-red    { background: var(--c-red);     color: #fff; }
-#btn-green  { background: var(--c-green);   }
-#btn-yellow { background: var(--c-yellow);  }
-#btn-cyan   { background: var(--c-cyan);    }
-
-#numpad {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+.effects-enabled .glass {
+  background:
+    radial-gradient(ellipse at 30% 15%, rgba(255,255,255,.09), transparent 40%),
+    radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.55) 100%);
 }
-.num-btn {
-  padding: 8px; font-family: inherit; font-size: 16px;
-  background: #222; color: #fff; border: 1px solid #444; cursor: pointer;
-  border-radius: 2px;
+.effects-enabled .ghost-roll {
+  background: linear-gradient(to bottom, transparent, rgba(140,255,90,.06) 45%, rgba(255,255,255,.10) 50%, rgba(140,255,90,.06) 55%, transparent);
+  height: 30%;
+  transform: translateY(-120%);
+  animation: roll 21s linear infinite;
 }
-.num-btn:hover, #ctrl-bar button:hover { background: #333; }
-
-#ctrl-bar { display: flex; gap: 2px; }
-#ctrl-bar button {
-  flex: 1; padding: 6px 4px; font-family: inherit; font-size: 11px;
-  font-weight: bold; background: #222; color: #fff;
-  border: 1px solid #444; cursor: pointer; border-radius: 2px;
-  text-transform: uppercase;
+@keyframes roll {
+  0%, 88% { transform: translateY(-120%); }
+  100% { transform: translateY(420%); }
 }
-
-/* ── Accessibility ── */
-.sr-only {
-  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+.effects-enabled #screen { animation: flicker 13s infinite; }
+@keyframes flicker {
+  0%, 96%, 100% { filter: none; }
+  96.5% { filter: brightness(1.35) contrast(1.2); transform: translateX(1px); }
+  97% { filter: brightness(.8); transform: translateX(-1px) skewX(.4deg); }
+  97.5% { filter: none; transform: none; }
 }
+/* Page 666 is properly haunted */
+.effects-enabled[data-page="666"] #screen { animation: flicker 4s infinite; }
+.effects-enabled[data-page="666"] #bezel { box-shadow: 0 30px 80px rgba(0,0,0,.75), 0 0 60px rgba(140,255,90,.18), 0 0 0 2px #0b0a0e; }
 
-/* ── Reduced motion: kill everything ── */
+#tv-foot { display: flex; justify-content: space-between; align-items: center; padding: 10px 8px 2px; }
+.brand { font-size: 12px; letter-spacing: 3px; color: #8d859c; }
+.brand em { font-style: normal; color: var(--pumpkin); }
+.led { width: 9px; height: 9px; border-radius: 50%; background: #ff2a2a; box-shadow: 0 0 8px #ff2a2a; }
+.effects-enabled .led { animation: led 3s infinite; }
+@keyframes led { 50% { opacity: .55; } }
+
+/* ── Remote control ───────────────────────────────────────────────────── */
+#remote {
+  width: 220px;
+  padding: 18px 16px 16px;
+  border-radius: 28px 28px 40px 40px;
+  background: linear-gradient(180deg, #2b2730, #17151b 70%, #121015);
+  box-shadow: 0 24px 60px rgba(0,0,0,.7), inset 0 1px 1px rgba(255,255,255,.12), inset 0 -4px 10px rgba(0,0,0,.6);
+  display: flex; flex-direction: column; gap: 12px;
+}
+@media (max-width: 900px) { #remote { width: min(420px, 100%); } }
+.ir { width: 34px; height: 10px; margin: 0 auto; border-radius: 6px; background: radial-gradient(#5a1010, #200606); }
+
+#remote button {
+  font-family: inherit;
+  cursor: pointer;
+  border: 0;
+  border-radius: 8px;
+  color: #eee;
+  background: linear-gradient(180deg, #3b3641, #26222b);
+  box-shadow: 0 2px 0 #0c0b0e, inset 0 1px 0 rgba(255,255,255,.12);
+  padding: 9px 4px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  transition: transform .06s ease;
+}
+#remote button:active { transform: translateY(2px); box-shadow: 0 0 0 #0c0b0e; }
+#remote button:focus-visible { outline: 3px solid var(--c-yellow); outline-offset: 2px; }
+#remote button[hidden] { display: none; }
+#remote button:disabled { opacity: .35; cursor: default; }
+
+#fastext-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+#remote .fastext-btn { font-size: 9px; padding: 12px 1px; color: #000; font-weight: bold; min-height: 36px; overflow: hidden; }
+#remote #btn-red    { background: linear-gradient(#ff5a5a, #c41010); color: #fff; }
+#remote #btn-green  { background: linear-gradient(#6aff7a, #10a020); }
+#remote #btn-yellow { background: linear-gradient(#fff57a, #c8b800); }
+#remote #btn-cyan   { background: linear-gradient(#7affff, #10a8b0); }
+
+#numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+#remote .num-btn { font-size: 18px; padding: 10px 0; border-radius: 50% / 40%; }
+#remote #btn-enter { background: linear-gradient(180deg, #5a7a3a, #2e4a1a); }
+
+#pbar, #ctrl-bar, #context-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+#context-bar { grid-template-columns: repeat(2, 1fr); }
+#context-bar:empty { display: none; }
+#remote #btn-hold.active, #remote #btn-reveal.active { background: linear-gradient(180deg, var(--pumpkin), #a84300); color: #000; }
+#remote #btn-exorcise[aria-pressed="true"] { background: linear-gradient(180deg, #ddd, #999); color: #000; }
+#remote #btn-speech, #remote #btn-share, #remote #btn-city, #remote #btn-here { background: linear-gradient(180deg, #2f6a2a, #173a14); color: var(--slime); }
+
+#subpage-indicator { grid-column: 1 / -1; text-align: center; font-size: 12px; color: var(--c-yellow); }
+#ctrl-bar { grid-template-columns: repeat(3, 1fr); }
+
+.remote-brand { text-align: center; font-size: 12px; letter-spacing: 3px; color: #7a7288; margin-top: 4px; }
+.remote-brand small { font-size: 9px; color: #5a5366; }
+
+/* ── Footer ───────────────────────────────────────────────────────────── */
+#foot { margin-top: 22px; text-align: center; font-size: 12px; color: #7d7590; line-height: 1.8; }
+#foot a { color: var(--slime); }
+kbd { font-family: inherit; border: 1px solid #4a4356; border-radius: 4px; padding: 0 4px; color: #cfc6e2; }
+
+/* ── City dialog ──────────────────────────────────────────────────────── */
+#city-dialog {
+  margin: auto; border: 3px solid var(--c-cyan); background: #000; color: var(--c-white);
+  font-family: inherit; padding: 18px; width: min(420px, 92vw);
+}
+#city-dialog::backdrop { background: rgba(0,0,0,.7); }
+#city-dialog h2 { font-size: 18px; color: var(--c-yellow); margin-bottom: 10px; }
+#city-dialog label { display: block; font-size: 12px; color: var(--c-cyan); }
+#city-dialog input { width: 100%; font: inherit; font-size: 18px; padding: 6px; background: #001; color: #fff; border: 2px solid var(--c-blue); margin: 6px 0 10px; }
+#city-results { list-style: none; display: grid; gap: 4px; margin-bottom: 10px; }
+#city-results button, .city-actions button { font: inherit; background: var(--c-blue); color: #fff; border: 0; padding: 6px 8px; width: 100%; text-align: left; cursor: pointer; }
+#city-results button:focus-visible, .city-actions button:focus-visible { outline: 3px solid var(--c-yellow); }
+.city-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.muted { color: #888; font-size: 13px; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
 @media (prefers-reduced-motion: reduce) {
-  .cell.flash { animation: none !important; }
-  #screen { animation: none !important; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }

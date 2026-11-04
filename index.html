@@ -3,55 +3,92 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#050505" />
+  <meta name="description" content="GHOSTFAX resurrects Teletext/Ceefax: live news, tech, weather, history, markets and live subtitles on an authentic 40x24 teletext grid. Ad-free, tiny, keyboard friendly." />
+  <meta property="og:title" content="GHOSTFAX - Teletext, risen from the grave" />
+  <meta property="og:description" content="Ceefax died in 2012. Type 100 and it comes back." />
   <title>GHOSTFAX — Teletext, risen from the grave</title>
   <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="assets/icons/icon-192.png" />
+  <link rel="preload" href="assets/fonts/bedstead.otf" as="font" type="font/otf" crossorigin />
   <link rel="stylesheet" href="styles/ghostfax.css" />
 </head>
-<body>
-  <!-- off-screen accessibility mirror -->
+<body class="effects-enabled">
+  <a class="skip" href="#remote">Skip to remote control</a>
   <div id="aria-mirror" aria-live="polite" aria-atomic="true" class="sr-only"></div>
 
-  <main id="tv">
-    <div id="screen">
-      <!-- 40×24 teletext grid, populated by renderer.js -->
-      <div id="grid" role="document" aria-label="Teletext page"></div>
+  <main id="room">
+    <header id="marquee">
+      <h1>GHOST<span>FAX</span></h1>
+      <p>Teletext, risen from the grave &middot; type a page number</p>
+    </header>
+
+    <div id="stage">
+      <section id="tv" aria-label="Ghostfax television">
+        <div id="bezel">
+          <div id="screen">
+            <div id="grid-wrap">
+              <div id="grid" role="document" aria-label="Teletext page (text mirror is read aloud)"></div>
+            </div>
+            <div class="scanlines" aria-hidden="true"></div>
+            <div class="glass" aria-hidden="true"></div>
+            <div class="ghost-roll" aria-hidden="true"></div>
+          </div>
+          <div id="tv-foot">
+            <span class="brand">GHOSTFAX&nbsp;<em>1974&ndash;&infin;</em></span>
+            <span class="led" aria-hidden="true"></span>
+          </div>
+        </div>
+      </section>
+
+      <nav id="remote" aria-label="Remote control">
+        <div class="ir" aria-hidden="true"></div>
+        <div id="fastext-bar">
+          <button class="fastext-btn" id="btn-red"    aria-label="Red Fastext"></button>
+          <button class="fastext-btn" id="btn-green"  aria-label="Green Fastext"></button>
+          <button class="fastext-btn" id="btn-yellow" aria-label="Yellow Fastext"></button>
+          <button class="fastext-btn" id="btn-cyan"   aria-label="Cyan Fastext"></button>
+        </div>
+        <div id="numpad">
+          <button class="num-btn" data-digit="1">1</button>
+          <button class="num-btn" data-digit="2">2</button>
+          <button class="num-btn" data-digit="3">3</button>
+          <button class="num-btn" data-digit="4">4</button>
+          <button class="num-btn" data-digit="5">5</button>
+          <button class="num-btn" data-digit="6">6</button>
+          <button class="num-btn" data-digit="7">7</button>
+          <button class="num-btn" data-digit="8">8</button>
+          <button class="num-btn" data-digit="9">9</button>
+          <button class="num-btn" id="btn-backspace" aria-label="Clear digits">CLR</button>
+          <button class="num-btn" data-digit="0">0</button>
+          <button class="num-btn" id="btn-enter" aria-label="Enter page number">OK</button>
+        </div>
+        <div id="pbar">
+          <button id="btn-pminus" aria-label="Previous page">P&minus;</button>
+          <button id="btn-index"  aria-label="Index page 100">INDEX</button>
+          <button id="btn-pplus"  aria-label="Next page">P+</button>
+        </div>
+        <div id="ctrl-bar">
+          <button id="btn-hold"     aria-label="Hold subpage (H)">HOLD</button>
+          <button id="btn-reveal"   aria-label="Reveal hidden answers (R)">REVEAL</button>
+          <button id="btn-exorcise" aria-label="Turn spooky effects off (X)">EXORCISE</button>
+        </div>
+        <div id="context-bar">
+          <button id="btn-speech" hidden>START SUBS</button>
+          <button id="btn-share" hidden>SHARE</button>
+          <button id="btn-city" hidden>CITY</button>
+          <button id="btn-here" hidden>HERE</button>
+        </div>
+        <p class="remote-brand">GHOSTFAX<br><small>REMOTE MODEL 666</small></p>
+      </nav>
     </div>
 
-    <!-- on-screen remote control -->
-    <nav id="remote" aria-label="Remote control">
-      <div id="fastext-bar">
-        <button class="fastext-btn" id="btn-red"    data-key="F1" aria-label="Red — navigate"></button>
-        <button class="fastext-btn" id="btn-green"  data-key="F2" aria-label="Green — navigate"></button>
-        <button class="fastext-btn" id="btn-yellow" data-key="F3" aria-label="Yellow — navigate"></button>
-        <button class="fastext-btn" id="btn-cyan"   data-key="F4" aria-label="Cyan — navigate"></button>
-      </div>
-      <div id="numpad">
-        <button class="num-btn" data-digit="1">1</button>
-        <button class="num-btn" data-digit="2">2</button>
-        <button class="num-btn" data-digit="3">3</button>
-        <button class="num-btn" data-digit="4">4</button>
-        <button class="num-btn" data-digit="5">5</button>
-        <button class="num-btn" data-digit="6">6</button>
-        <button class="num-btn" data-digit="7">7</button>
-        <button class="num-btn" data-digit="8">8</button>
-        <button class="num-btn" data-digit="9">9</button>
-        <button class="num-btn" id="btn-backspace" aria-label="Backspace">←</button>
-        <button class="num-btn" data-digit="0">0</button>
-        <button class="num-btn" id="btn-enter" aria-label="Enter">↵</button>
-      </div>
-      <div id="ctrl-bar">
-        <button id="btn-hold"   aria-label="Hold page (H)">HOLD</button>
-        <button id="btn-reveal" aria-label="Reveal hidden text (R)">REVEAL</button>
-        <button id="btn-exorcise" aria-label="Toggle CRT effects">EXORCISE</button>
-        <button id="btn-index"  aria-label="Go to index page 100">INDEX</button>
-      </div>
-    </nav>
+    <footer id="foot">
+      <p>Keys: <kbd>0-9</kbd> page &middot; <kbd>&uarr;</kbd><kbd>&darr;</kbd> P&plusmn; &middot; <kbd>F1-F4</kbd>/<kbd>Q W E T</kbd> Fastext &middot; <kbd>H</kbd> hold &middot; <kbd>R</kbd> reveal &middot; <kbd>X</kbd> exorcise &middot; <kbd>I</kbd> index</p>
+      <p>Data: Wikipedia, Hacker News, Open-Meteo, CoinGecko &middot; Font: Bedstead (public domain) &middot; <a href="https://github.com/cryptocloud786/ghostfax">Source (MIT)</a> &middot; Built with Kiro for Kiroween 2026</p>
+    </footer>
   </main>
 
-  <script type="module" src="src/ui/accessibility.js"></script>
-  <script type="module" src="src/ui/renderer.js"></script>
-  <script type="module" src="src/ui/clock.js"></script>
-  <script type="module" src="src/ui/keypad.js"></script>
+  <script type="module" src="src/ui/app.js"></script>
 </body>
 </html>

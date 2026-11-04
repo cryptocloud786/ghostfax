@@ -60,6 +60,17 @@ export function build(_data, ctx = {}) {
     return [page];
   }
 
+  if (captions.length === 0 && ctx.speechActive === false) {
+    writeText(page, 4, 1, 'TELETEXT SUBTITLES, RESURRECTED.', { fg: 'cyan', bg: 'black' });
+    writeText(page, 6, 1, 'PRESS START SUBS ON THE REMOTE AND', { fg: 'white', bg: 'black' });
+    writeText(page, 7, 1, 'ANYTHING SAID NEAR YOUR MIC APPEARS', { fg: 'white', bg: 'black' });
+    writeText(page, 8, 1, 'HERE AS LIVE CAPTIONS.', { fg: 'white', bg: 'black' });
+    writeText(page, 10, 1, 'FOR LECTURES, CALLS AND TV WITH NO', { fg: 'yellow', bg: 'black' });
+    writeText(page, 11, 1, 'SUBTITLES OF ITS OWN.', { fg: 'yellow', bg: 'black' });
+    applyFastext(page, FASTEXT);
+    return [page];
+  }
+
   if (captions.length === 0) {
     writeText(page, 4, 1, 'LISTENING...', { fg: 'cyan', bg: 'black' });
     writeText(page, 6, 1, 'SPEAK CLEARLY INTO YOUR', { fg: 'white', bg: 'black' });
@@ -85,7 +96,7 @@ export function build(_data, ctx = {}) {
   }
 
   // Row 22: status.
-  writeText(page, 22, 1, '* LIVE * PRESS NAV TO STOP', { fg: 'cyan', bg: 'black' });
+  writeText(page, 22, 1, '* LIVE * PRESS STOP SUBS TO END', { fg: 'cyan', bg: 'black' });
 
   applyFastext(page, FASTEXT);
 

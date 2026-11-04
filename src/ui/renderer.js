@@ -6,14 +6,14 @@
  */
 
 const COLOUR_MAP = {
-  black:   '#000000',
-  red:     '#cc0000',
-  green:   '#00cc00',
-  yellow:  '#cccc00',
-  blue:    '#0000cc',
-  magenta: '#cc00cc',
-  cyan:    '#00cccc',
-  white:   '#cccccc',
+  black:   'var(--c-black)',
+  red:     'var(--c-red)',
+  green:   'var(--c-green)',
+  yellow:  'var(--c-yellow)',
+  blue:    'var(--c-blue)',
+  magenta: 'var(--c-magenta)',
+  cyan:    'var(--c-cyan)',
+  white:   'var(--c-white)',
 };
 
 /** The grid container element. */
@@ -30,7 +30,7 @@ let _cells = [];
  * Build the 24×40 DOM grid once on first render.
  */
 function ensureGrid() {
-  if (_cells.length === 40) return; // already built (check col count via row 0)
+  if (_cells.length === 24) return; // already built
   if (grid.children.length > 0) {
     // Collect existing cells.
     _cells = [];
@@ -64,7 +64,7 @@ function ensureGrid() {
  * @param {import('../teletext/grid.js').Cell} cell
  * @param {boolean} reveal
  */
-function applyCell(el, cell, reveal) {
+function applyCell(el, cell, reveal, dhRole = '') {
   // Character — use non-breaking space to preserve cell width for spaces.
   el.textContent = cell.ch === ' ' ? '\u00A0' : cell.ch;
 
@@ -73,20 +73,24 @@ function applyCell(el, cell, reveal) {
   el.style.background = COLOUR_MAP[cell.bg] ?? COLOUR_MAP.black;
 
   // Attributes via CSS classes.
-  el.classList.toggle('dh',      Boolean(cell.dh));
   el.classList.toggle('flash',   Boolean(cell.flash));
   el.classList.toggle('conceal', Boolean(cell.conceal) && !reveal);
-  el.classList.toggle('revealed', Boolean(cell.conceal) && reveal);
+  // Double height: the first dh row of a pair is stretched over the second,
+  // whose own glyphs are hidden (teletext draws the pair from the top row).
+  el.classList.toggle('dh-top',    dhRole === 'top');
+  el.classList.toggle('dh-bottom', dhRole === 'bottom');
+}
 
-  // Double-height: scale via transform; let the next row be blank/hidden.
-  if (cell.dh) {
-    el.style.transform      = 'scaleY(2)';
-    el.style.transformOrigin = '50% 0%';
-    el.style.lineHeight     = '';
-  } else {
-    el.style.transform      = '';
-    el.style.transformOrigin = '';
+/** Work out which rows are the top / bottom halves of double-height pairs. */
+function dhRoles(page) {
+  const roles = new Array(24).fill('');
+  for (let r = 0; r < 24; r++) {
+    const row = page.rows[r];
+    if (!row || !row.some((c) => c.dh)) continue;
+    if (roles[r - 1] === 'top') roles[r] = 'bottom';
+    else roles[r] = 'top';
   }
+  return roles;
 }
 
 /**
@@ -98,11 +102,12 @@ export function renderPage(page) {
   ensureGrid();
   _currentPage = page;
 
+  const roles = dhRoles(page);
   for (let r = 0; r < 24; r++) {
     const row = page.rows[r];
     if (!row) continue;
     for (let c = 0; c < 40; c++) {
-      applyCell(_cells[r][c], row[c], _revealActive);
+      applyCell(_cells[r][c], row[c], _revealActive, roles[r]);
     }
   }
 }
@@ -130,7 +135,7 @@ export function setReveal(active) {
     if (!row) continue;
     for (let c = 0; c < 40; c++) {
       if (row[c].conceal) {
-        applyCell(_cells[r][c], row[c], active);
+        applyCell(_cells[r][c], row[c], active, '');
       }
     }
   }

@@ -23,7 +23,11 @@ const BASE = 'https://api.wikimedia.org/feed/v1/wikipedia/en/featured';
 function stripTags(html) {
   return String(html ?? '')
     .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;|&#160;/g, ' ')
+    .replace(/&amp;/g, '&')
     .replace(/\s+/g, ' ')
+    .replace(/\s+([.,;:!?)])/g, '$1')
+    .replace(/\(\s+/g, '(')
     .trim();
 }
 
