@@ -1,0 +1,39 @@
+{
+  "news": [
+    {
+      "story": "A <a href=\"/wiki/Test\">test event</a> occurred in the <b>world</b> today.",
+      "links": [
+        {
+          "title": "Test event",
+          "titles": { "normalized": "Test Event" }
+        }
+      ]
+    },
+    {
+      "story": "Scientists made a <a href=\"/wiki/Discovery\">discovery</a> that changed things.",
+      "links": [
+        {
+          "title": "Discovery",
+          "titles": { "normalized": "Scientific Discovery" }
+        }
+      ]
+    }
+  ],
+  "onthisday": [
+    {
+      "year": 1974,
+      "text": "The BBC launched the <a href=\"/wiki/Ceefax\">Ceefax</a> teletext service.",
+      "pages": []
+    },
+    {
+      "year": 1517,
+      "text": "Martin Luther posted his <b>Ninety-Five Theses</b> in Wittenberg.",
+      "pages": []
+    },
+    {
+      "year": 1793,
+      "text": "The <a href=\"/wiki/Louvre\">Louvre Museum</a> opened in Paris, France.",
+      "pages": []
+    }
+  ]
+}

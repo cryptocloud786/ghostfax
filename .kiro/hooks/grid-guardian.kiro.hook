@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Grid Guardian",
+  "description": "Whenever a page builder or teletext module is saved, re-run the 40x24 grid lint and the property tests, and fix any page that overflows the teletext grid.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["src/pages/**/*.js", "src/teletext/**/*.js"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A Ghostfax page builder or teletext module was just edited. Run `node scripts/grid-lint.mjs` and `npm test`. If any page is not exactly 24 rows x 40 cells, or a property test fails, fix the builder (not the test) while keeping the teletext-style steering rules."
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Fixture Refresh (MCP fetch)",
+  "description": "When a data-source module changes, pull a fresh live sample from that API with the fetch MCP server and update tests/fixtures so normalisers are tested against the real response shape.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["src/data/*.js"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A data module in src/data changed. Use the fetch MCP tool to request the live API endpoint it uses (see .kiro/steering/tech.md), trim the response to a small representative sample, save it under tests/fixtures/, and run npm test to make sure the normaliser still handles the real shape. Never invent fields."
+  }
+}

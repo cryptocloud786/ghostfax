@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Accessibility Mirror Check",
+  "description": "When UI code changes, verify the screen-reader text mirror, Exorcise toggle and prefers-reduced-motion gating still work.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["src/ui/**/*.js", "styles/**/*.css", "index.html"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "UI code changed. Check that every rendered page still updates the aria-live plain-text mirror, that all animations are gated behind the .effects-enabled class (removed by Exorcise and prefers-reduced-motion), and that every Fastext and remote button has an accessible label. Report and fix regressions."
+  }
+}

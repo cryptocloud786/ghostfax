@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Spec Sync",
+  "description": "After the agent finishes a turn, check tasks.md checkboxes match what exists in src/ and tests/, and append any newly-discovered work as unchecked tasks.",
+  "version": "1",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Compare .kiro/specs/ghostfax/tasks.md with the repo. Tick tasks that are truly implemented and tested, untick any that are not, and add new unchecked tasks for gaps you noticed. Do not change code."
+  }
+}

@@ -14,24 +14,24 @@
 
 ## Phase 2 — Data Layer
 
-- [ ] 10. Implement `src/data/fetcher.js`: 5 s `AbortController` timeout, localStorage read/write, stale flag, offline null path. _(R16.1–R16.3, Design §6)_
-- [ ] 11. Implement `src/data/wikimedia.js`: fetch + parse featured feed; expose `getInTheNews(date)` and `getOnThisDay(date)`. _(R7.1, R10.1)_
-- [ ] 12. Implement `src/data/hackernews.js`: fetch top-stories list + top-20 item details. _(R8.1)_
-- [ ] 13. Implement `src/data/weather.js`: geocoding search + forecast fetch; cache city preference. _(R9.1, R9.2)_
-- [ ] 14. Implement `src/data/markets.js`: CoinGecko simple-price for BTC/ETH/SOL in USD+INR. _(R11.1)_
+- [x] 10. Implement `src/data/fetcher.js`: 5 s `AbortController` timeout, localStorage read/write, stale flag, offline null path. _(R16.1–R16.3, Design §6)_
+- [x] 11. Implement `src/data/wikimedia.js`: fetch + parse featured feed; expose `getInTheNews(date)` and `getOnThisDay(date)`. _(R7.1, R10.1)_
+- [x] 12. Implement `src/data/hackernews.js`: fetch top-stories list + top-20 item details. _(R8.1)_
+- [x] 13. Implement `src/data/weather.js`: geocoding search + forecast fetch; cache city preference. _(R9.1, R9.2)_
+- [x] 14. Implement `src/data/markets.js`: CoinGecko simple-price for BTC/ETH/SOL in USD+INR. _(R11.1)_
 
 ## Phase 3 — Page Builders
 
-- [ ] 15. Implement `src/pages/index.js` — page 100 directory with Fastext to 101/110/300/400. _(R6)_
-- [ ] 16. Implement `src/pages/news.js` — pages 101–104 from Wikimedia; `CACHED HH:MM` fallback; Fastext. _(R7)_
-- [ ] 17. Implement `src/pages/tech.js` — pages 110–114 from HN; `CACHED HH:MM` fallback; Fastext. _(R8)_
-- [ ] 18. Implement `src/pages/weather.js` — page 300; mosaic temperature bar chart; geolocation + city-search fallback; Fastext. _(R9)_
-- [ ] 19. Implement `src/pages/history.js` — page 400 from Wikimedia On This Day; Fastext. _(R10)_
-- [ ] 20. Implement `src/pages/markets.js` — page 500; green/red 24 h change colours; Fastext. _(R11)_
-- [ ] 21. Implement `src/pages/ghost.js` — page 666; mosaic ghost art; Halloween countdown; flash cells; Fastext. _(R12)_
-- [ ] 22. Implement `src/pages/writer.js` — page 700; editable canvas; URL-hash encode/decode on Share. _(R13)_
-- [ ] 23. Implement `src/pages/subtitles.js` — page 888; Web Speech API; graceful fallback message; stop on navigate. _(R14)_
-- [ ] 24. Implement `src/pages/help.js` — page 199; keyboard shortcuts; page directory. _(R15)_
+- [x] 15. Implement `src/pages/index.js` — page 100 directory with Fastext to 101/110/300/400. _(R6)_
+- [x] 16. Implement `src/pages/news.js` — pages 101–104 from Wikimedia; `CACHED HH:MM` fallback; Fastext. _(R7)_
+- [x] 17. Implement `src/pages/tech.js` — pages 110–114 from HN; `CACHED HH:MM` fallback; Fastext. _(R8)_
+- [x] 18. Implement `src/pages/weather.js` — page 300; mosaic temperature bar chart; geolocation + city-search fallback; Fastext. _(R9)_
+- [x] 19. Implement `src/pages/history.js` — page 400 from Wikimedia On This Day; Fastext. _(R10)_
+- [x] 20. Implement `src/pages/markets.js` — page 500; green/red 24 h change colours; Fastext. _(R11)_
+- [x] 21. Implement `src/pages/ghost.js` — page 666; mosaic ghost art; Halloween countdown; flash cells; Fastext. _(R12)_
+- [x] 22. Implement `src/pages/writer.js` — page 700; editable canvas; URL-hash encode/decode on Share. _(R13)_
+- [x] 23. Implement `src/pages/subtitles.js` — page 888; Web Speech API; graceful fallback message; stop on navigate. _(R14)_
+- [x] 24. Implement `src/pages/help.js` — page 199; keyboard shortcuts; page directory. _(R15)_
 
 ## Phase 4 — UI & Rendering
 
