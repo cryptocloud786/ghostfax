@@ -8,7 +8,9 @@
     "read",
     "shell",
     "todo_list",
-    "write"
+    "write",
+    "@fetch",
+    "@fetch"
   ],
   "allowedTools": [
     "fs_read",
@@ -16,7 +18,9 @@
     "execute_bash",
     "grep",
     "glob",
-    "todo_list"
+    "todo_list",
+    "@fetch",
+    "@fetch"
   ],
   "resources": [
     "file://.kiro/steering/**/*.md",
@@ -76,5 +80,6 @@
     "revision": 2,
     "fingerprint": "sha256:3b4a19b7f46f34ccf725a6de4f56de6743ba1162fd98e587cab323cf78af7e4b",
     "source": "sha256:9ecf14f501de04ecb19b7543e7359485fe4fd21371cf8dc44e038992c200e3ca"
-  }
+  },
+  "includeMcpJson": true
 }
