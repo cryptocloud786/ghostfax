@@ -32,18 +32,23 @@ function fmtPrice(n, decimals = 0) {
 }
 
 /**
- * Format a 24h change with sign and 2 decimal places.
- * @param {number} pct
+ * Format a 24h change with sign and 2 decimal places, or "--" for null.
+ * @param {number|null} pct
+ * @returns {{ text: string, fg: string }}
  */
 function fmtChange(pct) {
+  if (pct == null) return { text: '  --  ', fg: 'white' };
   const sign = pct >= 0 ? '+' : '';
-  return `${sign}${pct.toFixed(2)}%`;
+  return {
+    text: `${sign}${pct.toFixed(2)}%`,
+    fg:   pct >= 0 ? 'green' : 'red',
+  };
 }
 
 /**
- * @typedef {{ symbol: string, usd: number, inr: number, usd_24h: number, inr_24h: number }} CoinPrice
+ * @typedef {{ symbol: string, usd: number, inr: number, usd_24h: number|null, inr_24h: number|null }} CoinPrice
  *
- * @param {{ coins: CoinPrice[], stale: boolean, cacheTs: number|null }} data
+ * @param {{ coins: CoinPrice[], stale: boolean, cacheTs: number|null, source?: string }} data
  * @param {object} [ctx]
  * @returns {import('../teletext/grid.js').Page[]}
  */
@@ -78,27 +83,27 @@ export function build(data, ctx = {}) {
   for (const coin of data.coins) {
     if (row > 21) break;
 
-    const usdStr    = fmtPrice(coin.usd).slice(0, 10).padStart(10, ' ');
-    const inrStr    = fmtPrice(coin.inr).slice(0, 10).padStart(10, ' ');
-    const changeStr = fmtChange(coin.usd_24h).slice(0, 7).padStart(7, ' ');
-    const changeFg  = coin.usd_24h >= 0 ? 'green' : 'red';
+    const usdStr        = fmtPrice(coin.usd).slice(0, 10).padStart(10, ' ');
+    const inrStr        = fmtPrice(coin.inr).slice(0, 10).padStart(10, ' ');
+    const usdChange     = fmtChange(coin.usd_24h);
+    const changeStr     = usdChange.text.slice(0, 7).padStart(7, ' ');
 
     // Symbol.
     writeText(page, row, 1, coin.symbol.padEnd(4, ' '), { fg: 'white', bg: 'black' });
     // USD price.
     writeText(page, row, 6, usdStr, { fg: 'white', bg: 'black' });
     // 24h change (coloured).
-    writeText(page, row, 17, changeStr, { fg: changeFg, bg: 'black' });
+    writeText(page, row, 17, changeStr, { fg: usdChange.fg, bg: 'black' });
     // INR price.
     writeText(page, row, 25, inrStr, { fg: 'white', bg: 'black' });
 
     row++;
 
-    // Second row: secondary info.
-    const inrChangeStr = fmtChange(coin.inr_24h).slice(0, 7).padStart(7, ' ');
-    const inrChangeFg  = coin.inr_24h >= 0 ? 'green' : 'red';
+    // Second row: INR change.
+    const inrChange    = fmtChange(coin.inr_24h);
+    const inrChangeStr = inrChange.text.slice(0, 7).padStart(7, ' ');
     writeText(page, row, 6,  '          ', { fg: 'black', bg: 'black' }); // clear
-    writeText(page, row, 25, inrChangeStr, { fg: inrChangeFg, bg: 'black' });
+    writeText(page, row, 25, inrChangeStr, { fg: inrChange.fg, bg: 'black' });
     row++;
 
     // Separator.
@@ -108,8 +113,13 @@ export function build(data, ctx = {}) {
     }
   }
 
-  // Row 22: data source note.
-  writeText(page, 22, 1, 'DATA: COINGECKO.COM  FREE & OPEN', { fg: 'yellow', bg: 'black' });
+  // Row 22: data source note — name the actual source used.
+  const sourceLabel = data.source === 'coinbase'
+    ? 'DATA: COINBASE'
+    : data.source === 'cache'
+      ? 'DATA: CACHED COPY'
+      : 'DATA: COINGECKO';
+  writeText(page, 22, 1, sourceLabel.padEnd(38, ' '), { fg: 'yellow', bg: 'black' });
 
   applyFastext(page, FASTEXT);
 
@@ -127,6 +137,7 @@ export const sample = {
   ],
   stale:   false,
   cacheTs: null,
+  source:  'coingecko',
 };
 
 registerPage(500, (data, ctx) => Promise.resolve(build(data ?? sample, ctx)));

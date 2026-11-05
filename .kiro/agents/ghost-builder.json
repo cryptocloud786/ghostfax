@@ -9,7 +9,6 @@
     "shell",
     "todo_list",
     "write",
-    "@fetch",
     "@fetch"
   ],
   "allowedTools": [
@@ -19,7 +18,6 @@
     "grep",
     "glob",
     "todo_list",
-    "@fetch",
     "@fetch"
   ],
   "resources": [

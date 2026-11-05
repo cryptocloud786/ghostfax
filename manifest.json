@@ -1,0 +1,25 @@
+{
+  "name": "GHOSTFAX",
+  "short_name": "Ghostfax",
+  "description": "Teletext, risen from the grave. Live news, weather, history, markets and subtitles on an authentic 40x24 grid.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

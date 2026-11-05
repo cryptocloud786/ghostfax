@@ -51,8 +51,20 @@
 
 ## Phase 6 — PWA & Polish
 
-- [ ] 35. Create `manifest.json` with name, short name, icons (192 px + 512 px), theme colour, `display: standalone`. _(R18.1)_
-- [ ] 36. Implement `service-worker.js`: cache-first for app-shell assets; network-first with cache fallback for API URLs; synthetic offline JSON for failed API fetches. _(R16.4, R18.2, R18.3)_
-- [ ] 37. Register service worker in `index.html`; verify offline load. _(R18.2)_
+- [x] 35. Create `manifest.json` with name, short name, icons (192 px + 512 px), theme colour, `display: standalone`. _(R18.1)_
+- [x] 36. Implement `service-worker.js`: cache-first for app-shell assets; network-first with cache fallback for API URLs; synthetic offline JSON for failed API fetches. _(R16.4, R18.2, R18.3)_
+- [x] 37. Register service worker in `index.html`; verify offline load. _(R18.2)_
 - [ ] 38. Add "NO SIGNAL" placeholder page builder for the case where the fetcher returns `{data: null, stale: true}`. _(R16.3)_
 - [ ] 39. Final pass: ensure `npm test` passes; verify 40×24 invariant visually; check all Fastext links resolve to real pages. _(Design §10)_
+
+## Phase 7 — Polish
+
+- [x] 40. P300 weather redesign: 24-hour sextant bar chart (rows 4–12, current-hour slice via `pickHourlySlice`), min/max labels, hour ticks; 5-day table with day/max(yellow)/min(cyan)/description; source line row 21. _(R9.1, R9.3)_
+- [x] 41. `normaliseForecast` exports `pickHourlySlice`; hourly slice starts at `current.time`; tests added for all slice edge cases. _(R9.2)_
+- [x] 42. Markets Coinbase fallback: `normaliseCoinbase` in `src/data/markets.js`; `getMarkets` tries CoinGecko then Coinbase then stale cache; P500 shows `"  --  "` (white) for null 24h change; source line names actual source used. Tests cover both normalisers with fixtures. _(R11.1, R11.3)_
+- [x] 43. P666 ghost redesign: 16×21 pixel bitmap (rounded head, hollow eyes, O mouth, wavy skirt+tail); flashing red double-height "BOO!" at col 11; ghost occupies text cols 1–8, rows 3–9. _(R12.1, R12.3)_
+- [x] 44. `manifest.json`: name "GHOSTFAX", short_name "Ghostfax", start_url "./", scope "./", display standalone, background/theme #050505, icons 192+512 in assets/icons/. _(R18.1)_
+- [x] 45. `scripts/make-icons.mjs`: generates icon-192.png and icon-512.png using only `node:zlib`; white ghost on black with 2px green glow border. _(tech.md)_
+- [x] 46. `service-worker.js`: cache-first for app shell (versioned `ghostfax-v1`); network-first with cache fallback for API hosts; synthetic offline JSON on total failure; old-cache cleanup on activate. _(R16.4, R18.2, R18.3)_
+- [x] 47. `README.md`: what/who, live demo link, page directory, keyboard map, run locally, npm test, project structure, data sources + terms, font, MIT licence, Kiroween 2026, Built with Kiro section. _(product.md)_
+- [x] 48. `KIRO.md`: walkthrough of steering files, spec-driven development, hooks, agents, MCP fetch usage, and testing discipline.

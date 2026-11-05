@@ -101,6 +101,34 @@ export async function getForecast(lat, lon, cityName = '') {
 }
 
 /**
+ * Pick the next 24 hourly temperature slots from the raw Open-Meteo response,
+ * starting at the hour that matches raw.current.time.
+ *
+ * Open-Meteo returns hourly arrays beginning at 00:00 of the first forecast
+ * day.  raw.current.time is an ISO-like string "YYYY-MM-DDTHH:MM", so we find
+ * the index whose time prefix matches the current hour then take 24 entries.
+ * Falls back to index 0 if no match is found.
+ *
+ * @param {object} raw   Raw Open-Meteo response
+ * @returns {{ hour: string, temp: number }[]}
+ */
+export function pickHourlySlice(raw) {
+  const times = raw?.hourly?.time           ?? [];
+  const temps = raw?.hourly?.temperature_2m ?? [];
+
+  const currentTime = String(raw?.current?.time ?? '');  // "YYYY-MM-DDTHH:MM"
+  const currentHour = currentTime.slice(0, 13);          // "YYYY-MM-DDTHH"
+
+  let startIdx = times.findIndex((t) => String(t).slice(0, 13) === currentHour);
+  if (startIdx < 0) startIdx = 0;
+
+  return times.slice(startIdx, startIdx + 24).map((t, i) => ({
+    hour: String(t).slice(11, 16),                       // "HH:MM"
+    temp: Math.round(Number(temps[startIdx + i] ?? 0)),
+  }));
+}
+
+/**
  * Normalise raw Open-Meteo response.
  * @param {object} raw
  * @param {string} cityName
@@ -111,25 +139,21 @@ export async function getForecast(lat, lon, cityName = '') {
 export function normaliseForecast(raw, cityName = '', stale = false, cacheTs = null) {
   const cur = raw?.current ?? {};
   const current = {
-    temp:        Math.round(Number(cur.temperature_2m     ?? 0)),
-    windSpeed:   Math.round(Number(cur.wind_speed_10m    ?? 0)),
+    temp:        Math.round(Number(cur.temperature_2m  ?? 0)),
+    windSpeed:   Math.round(Number(cur.wind_speed_10m  ?? 0)),
     weatherCode: Number(cur.weather_code ?? 0),
     description: weatherDescription(Number(cur.weather_code ?? 0)),
+    time:        String(cur.time ?? ''),
   };
 
-  // Hourly — next 24 slots from now index 0.
-  const hourlyTimes = raw?.hourly?.time             ?? [];
-  const hourlyTemps = raw?.hourly?.temperature_2m   ?? [];
-  const hourly = hourlyTimes.slice(0, 24).map((t, i) => ({
-    hour: String(t).slice(11, 16), // "HH:MM"
-    temp: Math.round(Number(hourlyTemps[i] ?? 0)),
-  }));
+  // Hourly — next 24 slots starting at the current hour.
+  const hourly = pickHourlySlice(raw);
 
   // Daily — 5 days.
-  const dailyDates   = raw?.daily?.time                    ?? [];
-  const dailyMax     = raw?.daily?.temperature_2m_max      ?? [];
-  const dailyMin     = raw?.daily?.temperature_2m_min      ?? [];
-  const dailyCodes   = raw?.daily?.weather_code            ?? [];
+  const dailyDates = raw?.daily?.time                 ?? [];
+  const dailyMax   = raw?.daily?.temperature_2m_max   ?? [];
+  const dailyMin   = raw?.daily?.temperature_2m_min   ?? [];
+  const dailyCodes = raw?.daily?.weather_code         ?? [];
   const daily = dailyDates.slice(0, 5).map((date, i) => ({
     date:        String(date),
     maxTemp:     Math.round(Number(dailyMax[i]   ?? 0)),

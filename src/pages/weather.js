@@ -1,6 +1,23 @@
 /**
  * src/pages/weather.js
- * Page 300 — Weather forecast with mosaic bar chart.
+ * Page 300 — Weather forecast with mosaic sextant bar chart.
+ *
+ * Layout:
+ *   Row  0  — header (clock)
+ *   Row  1  — section banner "P300 WEATHER SERVICE" + optional CACHED tag
+ *   Row  2  — city name (cyan)
+ *   Row  3  — current conditions: temp + wind + description
+ *   Row  4  — blank
+ *   Row  5  — mosaic chart label row: "NOW   +6H  +12H  +18H"
+ *   Rows 5-11 — sextant bar chart of next-24-hour temperatures
+ *             (chart columns start at col 8, 24 cols wide = one per hour)
+ *             col 1-4: max/min labels ("-31C" / "+22C")
+ *   Row 12  — hour-tick labels
+ *   Row 13  — blank
+ *   Row 14  — "5-DAY FORECAST:" label (yellow)
+ *   Rows 15-19 — 5-day table (one row each)
+ *   Row 20  — blank
+ *   Row 21  — source line
  */
 
 import { blankPage, writeText } from '../teletext/grid.js';
@@ -8,7 +25,7 @@ import { encode as mosaicEncode } from '../teletext/mosaic.js';
 import { registerPage } from '../teletext/router.js';
 import {
   applyHeader, applyFastext, writeCacheTag,
-  noSignalPage, BODY_COL, BODY_WIDTH,
+  noSignalPage,
 } from './_builder.js';
 
 export const numbers = [300];
@@ -20,77 +37,134 @@ const FASTEXT = {
   cyan:   { label: 'HISTORY', page: 400 },
 };
 
-/** Day abbreviations for the daily forecast. */
+/** Day abbreviations. */
 const DAY_ABBR = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 /**
- * Build a mosaic temperature bar chart across 5 days.
- * Chart occupies rows 14–20 (7 rows).
+ * WMO weather codes → terse 14-char-max descriptions for the 5-day table.
+ */
+const WMO_SHORT = {
+  0:  'CLEAR',        1: 'MAINLY CLEAR', 2: 'PARTLY CLOUDY', 3: 'OVERCAST',
+  45: 'FOGGY',       48: 'RIME FOG',
+  51: 'LT DRIZZLE',  53: 'DRIZZLE',     55: 'HVY DRIZZLE',
+  61: 'LT RAIN',     63: 'RAIN',        65: 'HVY RAIN',
+  71: 'LT SNOW',     73: 'SNOW',        75: 'HVY SNOW',
+  80: 'LT SHOWERS',  81: 'SHOWERS',     82: 'SHOWERS+',
+  95: 'THUNDER',     96: 'HAIL',        99: 'HEAVY HAIL',
+};
+
+function wmoShort(code) {
+  return WMO_SHORT[code] ?? `CODE ${code}`;
+}
+
+/** Format temperature with sign, e.g. "+14C" or "-3C". */
+function fmtTemp(t) {
+  return `${t >= 0 ? '+' : ''}${t}C`;
+}
+
+/**
+ * Draw the 24-column sextant bar chart for next-24-hour temperatures.
  *
- * Each day column is 7 chars wide (5 days × 7 = 35 chars, col 2–36).
- * The bar height represents the temperature range within a fixed scale.
+ * The chart occupies rows 5–11 (7 text rows = 14 mosaic pixel rows).
+ * Chart columns: col 8 to col 31 (24 columns, one per hour).
+ * Left margin (cols 1–7): max label at top, min label at bottom.
+ *
+ * Each text cell is a sextant character covering 1 col × 3 pixel rows
+ * (top/mid/bot bits in pairs).  We build the chart by computing, for each
+ * column×row pair, whether the pixel is "filled" (bar is present).
  *
  * @param {import('../teletext/grid.js').Page} page
- * @param {Array<{date:string,maxTemp:number,minTemp:number}>} daily
+ * @param {{ hour: string, temp: number }[]} hourly   24-element array
  */
-function drawBarChart(page, daily) {
-  if (!daily || daily.length === 0) return;
+function drawHourlyChart(page, hourly) {
+  if (!hourly || hourly.length === 0) return;
 
-  // Find global min/max for scale.
-  const allMax = daily.map(d => d.maxTemp);
-  const allMin = daily.map(d => d.minTemp);
-  const globalMax = Math.max(...allMax, 0);
-  const globalMin = Math.min(...allMin, 0);
-  const range = globalMax - globalMin || 1;
+  const CHART_START_COL = 8;   // first data column
+  const CHART_COLS      = Math.min(hourly.length, 24);
+  const CHART_START_ROW = 5;   // first text row
+  const CHART_ROWS      = 7;   // text rows (rows 5–11)
+  // Each text row maps to 3 pixel rows. Total pixel rows = 21.
+  const PIXEL_ROWS = CHART_ROWS * 3;
 
-  // Chart area: rows 14–20 (7 visible rows = 14 mosaic pixel rows).
-  const CHART_TOP_ROW = 14;
-  const CHART_ROWS    = 7; // text rows; each row = 2 mosaic pixel rows (top/mid of 2x3)
-  // We use a simple 1-row-per-temp-unit approach: map temp to row.
-  const CHART_BOTTOM  = CHART_TOP_ROW + CHART_ROWS - 1; // row 20
+  const temps   = hourly.slice(0, CHART_COLS).map((h) => h.temp);
+  const maxTemp = Math.max(...temps);
+  const minTemp = Math.min(...temps);
+  const range   = maxTemp - minTemp || 1;
 
-  // Column layout: 5 days, each 7 chars wide starting at col 2.
-  const COL_WIDTH = 7;
-  const COL_START = 2;
+  // Max/min labels on the left (cols 1–6), right-aligned in 6 chars.
+  const maxLabel = fmtTemp(maxTemp).padStart(4, ' ');
+  const minLabel = fmtTemp(minTemp).padStart(4, ' ');
+  writeText(page, CHART_START_ROW,               1, maxLabel, { fg: 'yellow', bg: 'black' });
+  writeText(page, CHART_START_ROW + CHART_ROWS - 1, 1, minLabel, { fg: 'cyan',   bg: 'black' });
 
-  for (let di = 0; di < Math.min(daily.length, 5); di++) {
-    const day      = daily[di];
-    const colBase  = COL_START + di * COL_WIDTH;
+  // For each chart column (one per hour), build a pixel column then encode
+  // into sextant characters.
+  for (let col = 0; col < CHART_COLS; col++) {
+    const temp    = temps[col];
+    // barTop is the pixel row at which the bar starts (from the top).
+    // Lower temp → bar starts lower → more empty space above.
+    // barTop = 0 means bar fills from very top.
+    const fraction = (temp - minTemp) / range;          // 0..1, 0 = min
+    const filledPx = Math.round(fraction * (PIXEL_ROWS - 1)) + 1; // 1..PIXEL_ROWS
+    const barTopPx = PIXEL_ROWS - filledPx;             // 0-indexed from top
 
-    // Date label from ISO date string "YYYY-MM-DD".
-    const parts    = day.date.split('-');
-    const dayOfWeek = parts.length === 3
-      ? DAY_ABBR[new Date(day.date + 'T12:00:00').getDay()] ?? '---'
-      : '---';
-    const dateLabel = dayOfWeek.padEnd(COL_WIDTH, ' ').slice(0, COL_WIDTH);
-    writeText(page, CHART_TOP_ROW - 1, colBase, dateLabel, { fg: 'cyan', bg: 'black' });
+    const textCol = CHART_START_COL + col;
 
-    // For each chart row, decide if we're inside the min-max bar.
-    // Map: row CHART_TOP_ROW = globalMax, row CHART_BOTTOM = globalMin.
-    for (let r = CHART_TOP_ROW; r <= CHART_BOTTOM; r++) {
-      const fraction = 1 - (r - CHART_TOP_ROW) / (CHART_ROWS - 1);
-      const tempAtRow = globalMin + fraction * range;
+    for (let tr = 0; tr < CHART_ROWS; tr++) {
+      const textRow = CHART_START_ROW + tr;
+      // 3 pixel rows for this text row: top, mid, bot
+      const px = [0, 1, 2].map((offset) => {
+        const pixelRow = tr * 3 + offset;
+        return pixelRow >= barTopPx;
+      });
 
-      const inBar = tempAtRow >= day.minTemp && tempAtRow <= day.maxTemp;
-      const aboveMax = tempAtRow > day.maxTemp;
+      // Sextant: bit0=top-left, bit1=top-right, bit2=mid-left, bit3=mid-right,
+      //          bit4=bot-left, bit5=bot-right.
+      // Single-column chart: both left and right of each cell are the same pixel.
+      const bits = [px[0], px[0], px[1], px[1], px[2], px[2]];
+      const ch   = mosaicEncode(bits);
 
-      // Draw 2 mosaic chars per column (left + right of 2-wide block).
-      // Use solid block for bar, space otherwise.
-      const barChar = inBar ? '█' : ' ';
-      const fg      = inBar
-        ? (day.maxTemp >= 25 ? 'red' : day.maxTemp >= 15 ? 'yellow' : 'cyan')
-        : 'black';
+      // Colour: warm for hot temps, cool for cold.
+      const fg = temp >= 30 ? 'red'
+               : temp >= 20 ? 'yellow'
+               : temp >= 10 ? 'green'
+               : 'cyan';
 
-      // Write 4 chars of bar (leaving 2 for gap + 1 for label separator).
-      const barStr = barChar.repeat(4).padEnd(COL_WIDTH - 1, ' ');
-      writeText(page, r, colBase, barStr, { fg, bg: 'black' });
+      const cell = page.rows[textRow]?.[textCol];
+      if (cell) {
+        cell.ch = ch;
+        cell.fg = (ch === ' ') ? 'black' : fg;
+        cell.bg = 'black';
+      }
     }
+  }
+}
 
-    // Max/min labels at bottom.
-    const maxStr = `${day.maxTemp > 0 ? '+' : ''}${day.maxTemp}`;
-    const minStr = `${day.minTemp > 0 ? '+' : ''}${day.minTemp}`;
-    const tempLine = `${maxStr}/${minStr}`.slice(0, COL_WIDTH).padEnd(COL_WIDTH, ' ');
-    writeText(page, CHART_BOTTOM + 1, colBase, tempLine, { fg: 'white', bg: 'black' });
+/**
+ * Draw the hour-tick labels under the chart (row 12).
+ * Shows "NOW", "+6H", "+12H", "+18H" at the relevant columns.
+ *
+ * @param {import('../teletext/grid.js').Page} page
+ * @param {{ hour: string, temp: number }[]} hourly
+ */
+function drawHourTicks(page, hourly) {
+  const CHART_START_COL = 8;
+  const TICK_ROW = 12;
+
+  const ticks = [
+    { offset: 0,  label: 'NOW' },
+    { offset: 6,  label: '+6H' },
+    { offset: 12, label: '+12H' },
+    { offset: 18, label: '+18H' },
+  ];
+
+  for (const { offset, label } of ticks) {
+    if (offset >= hourly.length) continue;
+    const col = CHART_START_COL + offset;
+    // Make sure label fits in 40 cols.
+    if (col + label.length <= 39) {
+      writeText(page, TICK_ROW, col, label, { fg: 'white', bg: 'black' });
+    }
   }
 }
 
@@ -121,10 +195,8 @@ export function build(data, ctx = {}) {
     writeText(page, 1, 20, '                    ', { fg: 'white', bg: 'green' });
     writeText(page, 4,  1, 'LOCATION NOT SET.', { fg: 'yellow', bg: 'black' });
     writeText(page, 5,  1, 'GEOLOCATION UNAVAILABLE.', { fg: 'white', bg: 'black' });
-    writeText(page, 7,  1, 'TO SET YOUR CITY, USE THE', { fg: 'white', bg: 'black' });
-    writeText(page, 8,  1, 'REMOTE CONTROL MENU OR', { fg: 'white', bg: 'black' });
-    writeText(page, 9,  1, 'VISIT PAGE 300 FROM THE', { fg: 'white', bg: 'black' });
-    writeText(page, 10, 1, 'APP SETTINGS.', { fg: 'white', bg: 'black' });
+    writeText(page, 7,  1, 'TO SET YOUR CITY, PRESS THE', { fg: 'white', bg: 'black' });
+    writeText(page, 8,  1, '"CITY" BUTTON ON THE REMOTE.', { fg: 'white', bg: 'black' });
     applyFastext(page, FASTEXT);
     return [page];
   }
@@ -143,20 +215,49 @@ export function build(data, ctx = {}) {
 
   // Row 3: current conditions.
   const cur  = data.current;
-  const temp = `${cur.temp > 0 ? '+' : ''}${cur.temp}C`;
+  const temp = fmtTemp(cur.temp);
   const wind = `WIND ${cur.windSpeed}KMH`;
-  const desc = cur.description.slice(0, 16);
+  const desc = cur.description.toUpperCase().slice(0, 14);
   const condLine = `  ${temp}  ${wind}  ${desc}`.slice(0, 38);
-  writeText(page, 3, 1, condLine.slice(0, 38), { fg: 'white', bg: 'black' });
+  writeText(page, 3, 1, condLine.padEnd(38, ' '), { fg: 'white', bg: 'black' });
 
-  // Row 13 separator label.
-  writeText(page, 12, 1, '5-DAY FORECAST:', { fg: 'yellow', bg: 'black' });
+  // Rows 4–12: hourly sextant bar chart.
+  const hourly = data.hourly ?? [];
+  writeText(page, 4, 1, 'NEXT 24 HOURS', { fg: 'yellow', bg: 'black' });
+  drawHourlyChart(page, hourly);
+  drawHourTicks(page, hourly);
 
-  // Mosaic bar chart rows 13–20.
-  drawBarChart(page, data.daily ?? []);
+  // Row 13: spacer / separator.
+  // (blank)
 
-  // Row 22: note.
-  writeText(page, 22, 1, 'DATA: OPEN-METEO.COM  FREE & OPEN', { fg: 'yellow', bg: 'black' });
+  // Row 14: 5-day heading.
+  writeText(page, 14, 1, '5-DAY FORECAST', { fg: 'yellow', bg: 'black' });
+
+  // Rows 15–19: one row per day.
+  const daily = data.daily ?? [];
+  for (let di = 0; di < Math.min(daily.length, 5); di++) {
+    const day     = daily[di];
+    const dayParts = day.date.split('-');
+    const dayOfWeek = dayParts.length === 3
+      ? (DAY_ABBR[new Date(day.date + 'T12:00:00Z').getDay()] ?? '---')
+      : '---';
+
+    const maxStr  = fmtTemp(day.maxTemp);
+    const minStr  = fmtTemp(day.minTemp);
+    const descStr = wmoShort(day.weatherCode ?? 0).slice(0, 14);
+
+    // "WED   +29C / +21C  MAINLY CLEAR"  — stays within 38 chars
+    // Layout: 3 + 2 + 5 + 3 + 5 + 2 + 14 = 34 chars max
+    const row = 15 + di;
+    writeText(page, row, 1, dayOfWeek, { fg: 'white', bg: 'black' });
+    writeText(page, row, 6, maxStr,    { fg: 'yellow', bg: 'black' });
+    writeText(page, row, 11, '/',      { fg: 'white',  bg: 'black' });
+    writeText(page, row, 13, minStr,   { fg: 'cyan',   bg: 'black' });
+    writeText(page, row, 19, descStr,  { fg: 'white',  bg: 'black' });
+  }
+
+  // Row 21: source line.
+  writeText(page, 21, 1, 'DATA: OPEN-METEO.COM  FREE & OPEN', { fg: 'yellow', bg: 'black' });
 
   applyFastext(page, FASTEXT);
 
@@ -165,12 +266,16 @@ export function build(data, ctx = {}) {
 
 /**
  * Sample data for tests / grid-lint.
+ * hourly array starts at index matching current.time for pickHourlySlice test.
  */
 export const sample = {
   city: 'London',
-  current: { temp: 14, windSpeed: 22, weatherCode: 2, description: 'PARTLY CLOUDY' },
-  hourly: Array.from({ length: 24 }, (_, i) => ({
-    hour: `${String(i).padStart(2, '0')}:00`,
+  current: {
+    temp: 14, windSpeed: 22, weatherCode: 2, description: 'PARTLY CLOUDY',
+    time: '2025-10-31T09:00',
+  },
+  hourly: Array.from({ length: 48 }, (_, i) => ({
+    hour: `${String(i % 24).padStart(2, '0')}:00`,
     temp: 10 + Math.round(Math.sin(i / 4) * 4),
   })),
   daily: [
