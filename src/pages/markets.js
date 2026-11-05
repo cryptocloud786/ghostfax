@@ -103,7 +103,9 @@ export function build(data, ctx = {}) {
     const inrChange    = fmtChange(coin.inr_24h);
     const inrChangeStr = inrChange.text.slice(0, 7).padStart(7, ' ');
     writeText(page, row, 6,  '          ', { fg: 'black', bg: 'black' }); // clear
-    writeText(page, row, 25, inrChangeStr, { fg: inrChange.fg, bg: 'black' });
+    if (coin.inr_24h != null) {
+      writeText(page, row, 25, inrChangeStr, { fg: inrChange.fg, bg: 'black' });
+    }
     row++;
 
     // Separator.
